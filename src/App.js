@@ -1,25 +1,44 @@
-import logo from './logo.svg';
-import './App.css';
+import React from 'react';
+import PropTypes from 'prop-types';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+class App extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      question: "question",
+      answers: ["answer1", "answer2", "answer3"]
+    }
+  }
+  update(e) {
+    this.setState({question: e.target.value})
+  }
+  render() {
+    return (
+      <div>
+        <h1>Supporting Integration</h1>
+        <h2>{this.state.question}</h2>
+        <ul>
+          {this.state.answers.map((ans) => (
+            <li key={ans}>
+              <input type="checkbox" name="check" value={ans}
+              onClick={e => this.onlyOne(e.target.value)} />{ans}
+            </li>
+          )
+          )}
+        </ul>
+      </div>
+    )
+  }
+  onlyOne(checkedAns) {
+    let checkboxes = document.getElementsByName("check")
+    checkboxes.forEach((item) => {
+      if (item.value !== checkedAns) {
+        item.checked = false
+      }
+    })
+  }
 }
 
-export default App;
+
+
+export default App
