@@ -1,0 +1,138 @@
+[1mdiff --git a/src/App.js b/src/App.js[m
+[1mindex b685685..eb5c61d 100644[m
+[1m--- a/src/App.js[m
+[1m+++ b/src/App.js[m
+[36m@@ -2,7 +2,7 @@[m [mimport React from 'react';[m
+ [m
+ import firebase from "firebase/compat/app";[m
+ [m
+[31m-import { collection, doc, addDoc, getFirestore, setDoc } from 'firebase/firestore';[m
+[32m+[m[32mimport { collection, doc, addDoc, getFirestore, setDoc, getDoc, getDocs, query } from 'firebase/firestore';[m
+ import { initializeApp } from "firebase/app";[m
+ [m
+ import { useCollectionData } from "react-firebase-hooks/firestore";[m
+[36m@@ -20,6 +20,7 @@[m [mconst firebaseConfig = {[m
+ const app = initializeApp(firebaseConfig)[m
+ const db = getFirestore(app)[m
+ const usersRef = collection(db, "users")[m
+[32m+[m[32mconst scenariosRef = collection(db, "scenarios")[m
+ [m
+ let userId = "";[m
+ [m
+[36m@@ -33,21 +34,26 @@[m [mclass App extends React.Component {[m
+       user: ""[m
+     }[m
+     this.handleSubmit = this.handleSubmit.bind(this)[m
+[32m+[m[32m    this.setUser = this.setUser.bind(this)[m
+   }[m
+ [m
+[31m-  handleSubmit() {[m
+[31m-    this.state.answers = ["answer1", "answer2", "answer3", "test"][m
+[31m-    this.setState({user: "TEST"})[m
+[31m-    console.log(this.state.answers)[m
+[31m-    console.log(app)[m
+[31m-    console.log(userId)[m
+[32m+[m[32m  async handleSubmit() {[m
+[32m+[m[32m    // this.state.answers = ["answer1", "answer2", "answer3", "test"][m
+[32m+[m[32m    const q = query(scenariosRef)[m
+[32m+[m[32m    const querySnap = await getDocs(q).then((querySnap) => querySnap.forEach((doc) => {[m
+[32m+[m[32m      this.state.answers.push(doc.data())}))[m
+[32m+[m[41m    [m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  setUser(docRef) {[m
+[32m+[m[32m    this.setState({user: docRef.id})[m
+   }[m
+ [m
+   render() {[m
+     return ([m
+       <div className="App">[m
+         {this.state.user == "" ? [m
+[31m-        <HomePage handleSubmit={this.handleSubmit} answers={this.answers}/> [m
+[32m+[m[32m        <HomePage handleSubmit={this.handleSubmit} setUser={this.setUser} answers={this.answers}/>[m[41m [m
+         : <Questions answers={this.state.answers}/>}[m
+       </div>[m
+     )[m
+[36m@@ -64,19 +70,23 @@[m [mclass HomePage extends React.Component {[m
+   constructor(props) {[m
+     super(props)[m
+     this.handleSubmit = this.handleSubmit.bind(this)[m
+[32m+[m[32m    this.setUser = this.setUser.bind(this)[m
+   }[m
+ [m
+[31m-  handleSubmit(name) {[m
+[31m-    console.log(name)[m
+[32m+[m[32m  handleSubmit() {[m
+     this.props.handleSubmit();[m
+   }[m
+ [m
+[32m+[m[32m  setUser(docRef) {[m
+[32m+[m[32m    this.props.setUser(docRef);[m
+[32m+[m[32m  }[m
+[32m+[m
+   render() {[m
+     return ([m
+       <div>[m
+         <h1>Supporting Integration</h1>[m
+ [m
+[31m-        <DetailsForm handleSubmit={this.handleSubmit}></DetailsForm>[m
+[32m+[m[32m        <DetailsForm handleSubmit={this.handleSubmit} setUser={this.setUser}></DetailsForm>[m
+       </div>[m
+     )[m
+   }[m
+[36m@@ -86,8 +96,8 @@[m [mclass HomePage extends React.Component {[m
+ [m
+ [m
+ class DetailsForm extends React.Component {[m
+[31m-  constructor() {[m
+[31m-    super();[m
+[32m+[m[32m  constructor(props) {[m
+[32m+[m[32m    super(props);[m
+     this.state = {[m
+       first_name: "",[m
+       last_name: "",[m
+[36m@@ -102,18 +112,18 @@[m [mclass DetailsForm extends React.Component {[m
+   }[m
+   async sendUserData(e) {[m
+     e.preventDefault();[m
+[31m-    await addDoc(collection(db, "users"), {[m
+[32m+[m[32m    console.log("test")[m
+[32m+[m[32m    const docRef = await addDoc(collection(db, "users"), {[m
+       first_name: this.state.first_name,[m
+       last_name: this.state.last_name,[m
+       role: this.state.role,[m
+       description: this.state.description[m
+[31m-    }).then(docRef => {user = docRef.id})[m
+[31m-    [m
+[32m+[m[32m    }).then((docRef) => {this.props.setUser(docRef)})[m
+   }[m
+   handleSubmit(e) {[m
+     e.preventDefault();[m
+[31m-    this.sendUserData(e)[m
+[31m-    this.props.handleSubmit()[m
+[32m+[m[32m    const docRef = this.sendUserData(e)[m
+[32m+[m[32m    this.props.handleSubmit(docRef)[m
+   }[m
+   handleFname(e) {[m
+     this.state.first_name = e.target.value[m
+[36m@@ -161,6 +171,7 @@[m [mclass Questions extends React.Component {[m
+       question: "question",[m
+       answers: this.props.answers[m
+     }[m
+[32m+[m[32m    this.state.answers.forEach((ans) => console.log(ans["key"]))[m
+   }[m
+   render() {[m
+     return ([m
+[36m@@ -169,9 +180,9 @@[m [mclass Questions extends React.Component {[m
+         <h2>{this.state.question}</h2>[m
+         <form>[m
+           {this.state.answers.map((ans) => ([m
+[31m-            <div key={ans}>[m
+[31m-              <input type="radio" id={ans} name="choice" value={ans} />[m
+[31m-              <label htmlFor={ans}>{ans}</label>[m
+[32m+[m[32m            <div key={ans["key"]}>[m
+[32m+[m[32m              <input type="radio" id={ans["key"]} name="choice" value={ans["key"]} />[m
+[32m+[m[32m              <label htmlFor={ans["key"]}>{ans["choice"]}</label>[m
+             </div>[m
+             )[m
+           )}[m
