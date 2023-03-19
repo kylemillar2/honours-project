@@ -6,6 +6,7 @@ import { collection, doc, addDoc, getFirestore, setDoc, getDoc, getDocs, query }
 import { initializeApp } from "firebase/app";
 
 import { useCollectionData } from "react-firebase-hooks/firestore";
+import { waitForElementToBeRemoved } from '@testing-library/react';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDVN5G7GDHLTOY7i37RgN9OrmsZtY40YII",
@@ -185,15 +186,27 @@ class Questions extends React.Component {
   }
 
   handleSubmit(e) {
+    console.log(e)
     e.preventDefault();
+
     this.state.answers.forEach((v) => {
+      
       if (this.state.curChoice == v["key"]) {
+
+        let toAdd = []
         v["add_tags"].forEach((e) => { 
           if (!this.state.tags.includes(e)) {
-            this.state.tags.push(e)
+            toAdd.push(e)
           }
         })
-        this.state.tags = this.state.tags.filter(function(e) { return !v["remove_tags"].includes(e)})
+        
+        let removedArr = this.state.tags
+        v["remove_tags"].forEach((e) => {
+          removedArr = removedArr.filter(x => x != e)
+        })
+
+        let temp = toAdd.concat(removedArr)
+        this.setState({ tags: temp })
       }
     })
     console.log(this.state.tags)
@@ -211,7 +224,7 @@ class Questions extends React.Component {
               ans["false_condition"].every(v => !this.state.tags.includes(v)) &&
               (
               <div key={ans["key"]}>
-                <input type="radio" onClick={() => this.state.curChoice=ans["key"]} id={ans["key"]} name="choice" value={ans["key"]} />
+                <input required type="radio" onClick={() => this.state.curChoice=ans["key"]} id={ans["key"]} name="choice" value={ans["key"]} />
                 <label htmlFor={ans["key"]}>{ans["choice"]}</label>
               </div>
               )
