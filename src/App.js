@@ -2,7 +2,7 @@ import React from 'react';
 
 import firebase from "firebase/compat/app";
 
-import { collection, doc, addDoc, getFirestore, setDoc, getDoc, getDocs, query } from 'firebase/firestore';
+import { collection, doc, addDoc, getFirestore, setDoc, getDoc, getDocs, query, updateDoc } from 'firebase/firestore';
 import { initializeApp } from "firebase/app";
 
 import { useCollectionData } from "react-firebase-hooks/firestore";
@@ -24,6 +24,7 @@ const app = initializeApp(firebaseConfig)
 const db = getFirestore(app)
 const usersRef = collection(db, "users")
 const scenariosRef = collection(db, "scenarios")
+const dljs = require("damerau-levenshtein-js")
 
 class App extends React.Component {
     
@@ -188,7 +189,7 @@ class Questions extends React.Component {
         this.handleSubmit = this.handleSubmit.bind(this)
     }
 
-    handleSubmit(e) {
+    async handleSubmit(e) {
         e.preventDefault();
 
         this.state.answers.forEach((v) => {
@@ -211,8 +212,14 @@ class Questions extends React.Component {
                 this.setState({ tags: temp })
             }
         })
-        this.setState({ userString: this.state.userString + this.state.curChoice})
+        //this.setState({ userString: this.state.userString + this.state.curChoice})
+        this.state.userString = this.state.userString + this.state.curChoice
         console.log(this.state.userString)
+
+        if (this.state.userString.length == 5) {
+            const userRef = doc(db, "users", this.state.user)
+            await updateDoc(userRef, { answer: this.state.userString })
+        }
     }
 
     render() {
@@ -289,7 +296,7 @@ class AnswerScreen extends React.Component {
                     console.log(user.id)
                     return (
                         user.id != this.state.user_id && user.id != "placeholder" &&
-                        <UserObject key={index} first_name={user.data()["first_name"]} last_name={user.data()["last_name"]} role={user.data()["role"]} description={user.data()["description"]} />
+                        <UserObject key={index} userString={this.state.userString} answer={user.data()["answer"]} first_name={user.data()["first_name"]} last_name={user.data()["last_name"]} role={user.data()["role"]} description={user.data()["description"]} />
                     )
                 })}
             </div>
@@ -306,21 +313,66 @@ class UserObject extends React.Component {
             first_name: this.props.first_name,
             last_name: this.props.last_name,
             role: this.props.role,
-            description: this.props.description
+            description: this.props.description,
+            answer: this.props.answer,
+            seen: false
         }
         console.log(this.state.first_name)
+        this.togglePopUp = this.togglePopUp.bind(this)
+        this.calculate_dld = this.calculate_dld.bind(this)
+    }
+
+    calculate_dld(userString) {
+        return dljs.distance(userString, this.state.answer)
+    }
+
+    togglePopUp() {
+        this.setState({ seen: !this.state.seen })
+    }
+
+    render() {
+        return (
+            <div className="user-object-container">
+                <div className="user-object" onClick={this.togglePopUp}>
+                    <div id="answer-name">
+                        <b>Name:</b> {this.state.first_name + " " + this.state.last_name}
+                    </div>
+                    <div id="answer-role">
+                        <b>Role:</b> {this.state.role}
+                    </div>
+                    <div id="answer-desc">
+                        <b>Description:</b> {this.state.description}
+                    </div>
+                    <div id="answer-answer">
+                        <b>Difference:</b> {this.calculate_dld(this.props.userString)}
+                    </div>
+                </div>
+                
+                    {this.state.seen ? 
+                        <PopUp className="popup" toggle={this.togglePopUp} score={this.calculate_dld(this.props.userString)}/>
+                        : null
+                    }
+            </div>
+        )
+    }
+}
+
+
+class PopUp extends React.Component {
+    constructor() {
+        super()
+        this.handleClick = this.handleClick.bind(this)
+    }
+    handleClick() {
+        console.log("clicked")
+        this.props.toggle();
     }
     render() {
         return (
-            <div className="user-object">
-                <div id="answer-name">
-                    <b>Name:</b> {this.state.first_name + " " + this.state.last_name}
-                </div>
-                <div id="answer-role">
-                    <b>Role:</b> {this.state.role}
-                </div>
-                <div id="answer-desc">
-                    <b>Description:</b> {this.state.description}
+            <div className="modal-container">
+                <div className="modal">
+                    Difference between your decisions is {this.props.score}
+                    <span onClick={this.handleClick}>close</span>
                 </div>
             </div>
         )
