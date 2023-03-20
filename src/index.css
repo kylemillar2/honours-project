@@ -87,7 +87,31 @@ code {
   width: 30%;
   height: 30%;
   padding: 12px;
-  gap: 12px;
+  gap: 24px;
   background-color: white;
   border: 2px solid black;
+  display: flex;
+  flex-direction: column;
+}
+
+.comparison {
+  display: flex;
+  justify-content: space-between;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+.red {
+  color: red;
+}
+
+.green {
+  color: green;
+}
+
+.modal-users {
+  display: flex;
+  justify-content: space-between;
+  padding-left: 24px;
+  padding-right: 24px;
 }

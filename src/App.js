@@ -239,8 +239,7 @@ class Questions extends React.Component {
                 {this.state.userString.length < 5 ?
                     <div>
                         <h1>Supporting Integration</h1>
-                        {console.log(this.state.prompt)}
-                        <h2>{this.state.prompt["condition"]}</h2>
+                        <h3>{this.state.prompt["condition"]}</h3>
                         <form onSubmit={(e) => this.handleSubmit(e)}>
                             {this.state.answers.map((ans) => {
                                 return (
@@ -403,16 +402,29 @@ class PopUp extends React.Component {
                     comp2 = v["choice"]
                 }
             })
-            elements.push(
-                <div className="comparison" key={i}>
-                    <div className="comp1">
-                        {comp1}
+            if (comp1 == comp2) {
+                elements.push(
+                    <div className="comparison" key={i}>
+                        <div className="comp1 green">
+                            {comp1}
+                        </div>
+                        <div className="comp2 green">
+                            {comp2}
+                        </div>
                     </div>
-                    <div className="comp2">
-                        {comp2}
+                )
+            } else {
+                elements.push(
+                    <div className="comparison" key={i}>
+                        <div className="comp1 red">
+                            {comp1}
+                        </div>
+                        <div className="comp2 red">
+                            {comp2}
+                        </div>
                     </div>
-                </div>
-            )
+                )
+            }
         }
         console.log("test")
         return elements
@@ -421,8 +433,16 @@ class PopUp extends React.Component {
         return (
             <div className="modal-container" onClick={this.handleClick}>
                 <div className="modal" onClick={this.stopPropagation}>
-                    Difference between your decisions is {this.props.score}
-                    {this.compareAnswers()}
+                    <div className="modal-title">
+                        Distance between your decisions is {this.props.score} (lower is better)
+                    </div>
+                    <div className="modal-users">
+                        <span>Your answers</span>
+                        <span>User's answers</span>
+                    </div>
+                    <div className="compare-container">
+                        {this.compareAnswers()}
+                    </div>
                 </div>
             </div>
         )
