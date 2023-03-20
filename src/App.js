@@ -24,6 +24,7 @@ const app = initializeApp(firebaseConfig)
 const db = getFirestore(app)
 const usersRef = collection(db, "users")
 const scenariosRef = collection(db, "scenarios")
+const promptsRef = collection(db, "start_prompts")
 const dljs = require("damerau-levenshtein-js")
 
 class App extends React.Component {
@@ -33,7 +34,8 @@ class App extends React.Component {
         this.state = {
             question: "question",
             answers: [],
-            user: ""
+            user: "",
+            prompt: ""
         }
         this.handleSubmit = this.handleSubmit.bind(this)
         this.setUser = this.setUser.bind(this)
@@ -42,9 +44,12 @@ class App extends React.Component {
     async handleSubmit() {
         // this.state.answers = ["answer1", "answer2", "answer3", "test"]
         const q = query(scenariosRef)
-        const querySnap = await getDocs(q).then((querySnap) => querySnap.forEach((doc) => {
+        await getDocs(q).then((querySnap) => querySnap.forEach((doc) => {
             this.state.answers.push(doc.data())}))
-        
+
+        const q2 = query(promptsRef)
+        await getDocs(q2).then((querySnap) => querySnap.forEach((doc) => {
+            this.setState({ prompt: doc.data() })}))
     }
 
     setUser(docRef) {
@@ -56,7 +61,10 @@ class App extends React.Component {
             <div className="App">
                 {this.state.user == "" ? 
                 <HomePage handleSubmit={this.handleSubmit} setUser={this.setUser} answers={this.answers}/> 
-                : <Questions answers={this.state.answers} user={this.state.user}/>}
+                : 
+                this.state.prompt == "" ?
+                null :
+                <Questions prompt={this.state.prompt} answers={this.state.answers} user={this.state.user}/>}
             </div>
         )
     }
@@ -184,9 +192,11 @@ class Questions extends React.Component {
             user: this.props.user,
             tags: [],
             curChoice: "",
-            userString: ""
+            userString: "",
+            prompt: this.props.prompt
         }
         this.handleSubmit = this.handleSubmit.bind(this)
+        console.log(this.state.prompt, this.props.prompt)
     }
 
     async handleSubmit(e) {
@@ -229,7 +239,8 @@ class Questions extends React.Component {
                 {this.state.userString.length < 5 ?
                     <div>
                         <h1>Supporting Integration</h1>
-                        <h2>{this.state.question}</h2>
+                        {console.log(this.state.prompt)}
+                        <h2>{this.state.prompt["condition"]}</h2>
                         <form onSubmit={(e) => this.handleSubmit(e)}>
                             {this.state.answers.map((ans) => {
                                 return (
@@ -323,7 +334,7 @@ class UserObject extends React.Component {
     }
 
     calculate_dld(userString) {
-        return dljs.distance(userString, this.state.answer)
+        return Math.abs(dljs.distance(userString, this.state.answer))
     }
 
     togglePopUp() {
@@ -362,17 +373,20 @@ class PopUp extends React.Component {
     constructor() {
         super()
         this.handleClick = this.handleClick.bind(this)
+        this.stopPropagation = this.stopPropagation.bind(this)
     }
     handleClick() {
         console.log("clicked")
         this.props.toggle();
     }
+    stopPropagation(e) {
+        e.stopPropagation();
+    }
     render() {
         return (
-            <div className="modal-container">
-                <div className="modal">
+            <div className="modal-container" onClick={this.handleClick}>
+                <div className="modal" onClick={this.stopPropagation}>
                     Difference between your decisions is {this.props.score}
-                    <span onClick={this.handleClick}>close</span>
                 </div>
             </div>
         )
