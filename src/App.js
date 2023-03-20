@@ -261,7 +261,7 @@ class Questions extends React.Component {
                         </form>
                     </div>
                     :
-                    <AnswerScreen userString={this.state.userString} user_id={this.state.user} />
+                    <AnswerScreen choices={this.state.answers} userString={this.state.userString} user_id={this.state.user} />
                 }
             </div>
         )
@@ -307,7 +307,7 @@ class AnswerScreen extends React.Component {
                     console.log(user.id)
                     return (
                         user.id != this.state.user_id && user.id != "placeholder" &&
-                        <UserObject key={index} userString={this.state.userString} answer={user.data()["answer"]} first_name={user.data()["first_name"]} last_name={user.data()["last_name"]} role={user.data()["role"]} description={user.data()["description"]} />
+                        <UserObject key={index} choices={this.props.choices} userString={this.state.userString} answer={user.data()["answer"]} first_name={user.data()["first_name"]} last_name={user.data()["last_name"]} role={user.data()["role"]} description={user.data()["description"]} />
                     )
                 })}
             </div>
@@ -334,7 +334,8 @@ class UserObject extends React.Component {
     }
 
     calculate_dld(userString) {
-        return Math.abs(dljs.distance(userString, this.state.answer))
+        console.log("distance between",userString,this.state.answer)
+        return dljs.distance(userString, this.state.answer)
     }
 
     togglePopUp() {
@@ -360,7 +361,7 @@ class UserObject extends React.Component {
                 </div>
                 
                     {this.state.seen ? 
-                        <PopUp className="popup" toggle={this.togglePopUp} score={this.calculate_dld(this.props.userString)}/>
+                        <PopUp className="popup" userString={this.props.userString} answer={this.state.answer} choices={this.props.choices} toggle={this.togglePopUp} score={this.calculate_dld(this.props.userString)}/>
                         : null
                     }
             </div>
@@ -370,10 +371,17 @@ class UserObject extends React.Component {
 
 
 class PopUp extends React.Component {
-    constructor() {
-        super()
+    constructor(props) {
+        super(props)
+        this.state = {
+            choices: this.props.choices,
+            userString: this.props.userString,
+            answer: this.props.answer,
+            choices: this.props.choices
+        }
         this.handleClick = this.handleClick.bind(this)
         this.stopPropagation = this.stopPropagation.bind(this)
+
     }
     handleClick() {
         console.log("clicked")
@@ -382,11 +390,39 @@ class PopUp extends React.Component {
     stopPropagation(e) {
         e.stopPropagation();
     }
+    compareAnswers() {
+        let elements = []
+        for (let i=0; i < this.state.userString.length; i++) {
+            let comp1 = ""
+            let comp2 = ""
+            this.state.choices.forEach((v, index) => {
+                if (v["key"] == this.state.userString[i]) {
+                    comp1 = v["choice"]
+                }
+                if (v["key"] == this.state.answer[i]) {
+                    comp2 = v["choice"]
+                }
+            })
+            elements.push(
+                <div className="comparison" key={i}>
+                    <div className="comp1">
+                        {comp1}
+                    </div>
+                    <div className="comp2">
+                        {comp2}
+                    </div>
+                </div>
+            )
+        }
+        console.log("test")
+        return elements
+    }
     render() {
         return (
             <div className="modal-container" onClick={this.handleClick}>
                 <div className="modal" onClick={this.stopPropagation}>
                     Difference between your decisions is {this.props.score}
+                    {this.compareAnswers()}
                 </div>
             </div>
         )
