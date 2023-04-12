@@ -417,7 +417,7 @@ class PopUp extends React.Component {
                 elements.push(
                     <div className="comparison" key={i}>
                         <div className="comp1 red">
-                            cross {comp1}
+                            text
                         </div>
                         <div className="comp2 red">
                             cross {comp2}
