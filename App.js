@@ -406,10 +406,10 @@ class PopUp extends React.Component {
                 elements.push(
                     <div className="comparison" key={i}>
                         <div className="comp1 green">
-                            {comp1}
+                            ✅{comp1}
                         </div>
                         <div className="comp2 green">
-                            {comp2}
+                            ✅{comp2}
                         </div>
                     </div>
                 )
@@ -417,10 +417,10 @@ class PopUp extends React.Component {
                 elements.push(
                     <div className="comparison" key={i}>
                         <div className="comp1 red">
-                            {comp1}
+                            ❌{comp1}
                         </div>
                         <div className="comp2 red">
-                            {comp2}
+                            ❌{comp2}
                         </div>
                     </div>
                 )
